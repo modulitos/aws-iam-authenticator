@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"regexp"
 	"strings"
 	"sync"
@@ -302,6 +303,14 @@ func (h *handler) authenticateEndpoint(w http.ResponseWriter, req *http.Request)
 		"client": req.RemoteAddr,
 		"method": req.Method,
 	})
+
+	if logrus.IsLevelEnabled(logrus.DebugLevel) {
+		reqDump, err := httputil.DumpRequest(req, true)
+		if err != nil {
+			log.Info(err, "Failed to dump http request")
+		}
+		log.Debug("Request received", "request", string(reqDump))
+	}
 
 	if req.Method != http.MethodPost {
 		log.Error("unexpected request method")
