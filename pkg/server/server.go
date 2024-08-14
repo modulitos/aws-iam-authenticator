@@ -403,6 +403,15 @@ func (h *handler) authenticateEndpoint(w http.ResponseWriter, req *http.Request)
 		userExtra["sessionName"] = authenticationv1beta1.ExtraValue{identity.SessionName}
 		userExtra["accessKeyId"] = authenticationv1beta1.ExtraValue{identity.AccessKeyID}
 		userExtra["principalId"] = authenticationv1beta1.ExtraValue{identity.UserID}
+
+		if _, ok := req.Header["Impersonate-User"]; ok {
+			// Propagate these "extra" fields into the impersonated request's body:
+			w.Header().Add("Impersonate-Extra-PrincipalId", identity.UserID)
+			w.Header().Add("Impersonate-Extra-ARN", identity.ARN)
+			// TODO: We still need to test if this actually gets propagated into the request to api server:
+			// https://github.com/kubernetes/kubernetes/blob/d1ee15d2e2282b220b2c64c401cb83021f76bd22/staging/src/k8s.io/apiserver/pkg/endpoints/filters/impersonation.go#L235-L257
+		}
+
 	}
 
 	json.NewEncoder(w).Encode(authenticationv1beta1.TokenReview{
